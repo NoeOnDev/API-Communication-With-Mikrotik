@@ -26,5 +26,31 @@ def connect():
     except LibRouterosError as error:
         return jsonify({"status": "Error", "message": str(error)}), 400
 
+@app.route('/users', methods=['POST'])
+def get_users():
+    data = request.get_json()
+    ip_address = data['ip']
+    username = data['username']
+    password = data['password']
+
+    app.logger.info(f"Attempting to connect to {ip_address} with username {username}")
+    try:
+        connection = librouteros.connect(
+            host=ip_address,
+            username=username,
+            password=password,
+            login_method=plain,
+        )
+        app.logger.info(f"Connection to {ip_address} successful")
+        users = list(connection('/user/print'))
+        connection.close()
+        return jsonify({"status": "OK", "users": users})
+    except LibRouterosError as error:
+        app.logger.error(f"LibRouterosError: {error}")
+        return jsonify({"status": "Error", "message": str(error)}), 400
+    except Exception as error:
+        app.logger.error(f"General error: {error}")
+        return jsonify({"status": "Error", "message": "General error: " + str(error)}), 500
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
