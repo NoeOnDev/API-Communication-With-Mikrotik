@@ -43,6 +43,7 @@ def get_users():
         )
         app.logger.info(f"Connection to {ip_address} successful")
         users = list(connection('/user/print'))
+        app.logger.info(f"Users data: {users}")  # Log the users data
         connection.close()
         return jsonify({"status": "OK", "users": users})
     except LibRouterosError as error:
