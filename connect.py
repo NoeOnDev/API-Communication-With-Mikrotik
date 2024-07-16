@@ -173,7 +173,5 @@ def add_user():
         app.logger.error(f"General error: {error}")
         return jsonify({"status": "Error", "message": "General error: " + str(error)}), 500
 
-
-
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
