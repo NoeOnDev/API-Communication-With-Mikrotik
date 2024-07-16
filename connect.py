@@ -114,6 +114,51 @@ def delete_user():
     except Exception as error:
         app.logger.error(f"General error: {error}")
         return jsonify({"status": "Error", "message": "General error: " + str(error)}), 500
+    
+@app.route('/add_user', methods=['POST'])
+def add_user():
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({"status": "Error", "message": "Missing token"}), 400
+
+    data = verify_token(token)
+    if not data:
+        return jsonify({"status": "Error", "message": "Invalid or expired token"}), 400
+
+    user_data = request.json
+    if not user_data:
+        return jsonify({"status": "Error", "message": "Missing user data"}), 400
+
+    try:
+        connection = connect(
+            host=data['ip'],
+            username=data['username'],
+            password=data['password'],
+            login_method=plain,
+        )
+        app.logger.info('Connection established')
+        app.logger.info(f"Attempting to add user: {user_data['name']}")
+        
+        users = connection.path('/user')
+        new_user = users.add(
+            name=user_data['name'],
+            password=user_data['password'],
+            group=user_data['group'],
+            address=user_data.get('allowedAddress', ''),
+            comment=user_data.get('comment', ''),
+            disabled='no' if user_data.get('enabled', True) else 'yes'
+        )
+        
+        app.logger.info(f"User {user_data['name']} added with id: {new_user['.id']}")
+
+        connection.close()
+        return jsonify({"status": "OK", "message": f"User {user_data['name']} added", "id": new_user['.id']})
+    except LibRouterosError as error:
+        app.logger.error(f"LibRouterosError: {error}")
+        return jsonify({"status": "Error", "message": str(error)}), 400
+    except Exception as error:
+        app.logger.error(f"General error: {error}")
+        return jsonify({"status": "Error", "message": "General error: " + str(error)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
