@@ -134,6 +134,8 @@ def add_user():
     comment = user_data.get('comment', '')
     enabled = user_data.get('enabled', True)
     allowed_address = user_data.get('allowedAddress', '')
+    inactivity_timeout = user_data.get('inactivityTimeout', '10m')
+    inactivity_policy = user_data.get('inactivityPolicy', 'none')
 
     if not username or not password:
         return jsonify({"status": "Error", "message": "Username and password are required"}), 400
@@ -148,14 +150,18 @@ def add_user():
         app.logger.info('Connection established')
         
         users = connection.path('/user')
-        new_user_id = users.add(
-            name=username, 
-            password=password, 
-            group=group, 
-            comment=comment, 
-            disabled=not enabled,
-            address=allowed_address if allowed_address else "",
-        )
+        user_details = {
+            'name': username, 
+            'password': password, 
+            'group': group, 
+            'comment': comment, 
+            'disabled': not enabled,
+            'address': allowed_address if allowed_address else "",
+            'inactivity-timeout': inactivity_timeout,
+            'inactivity-policy': inactivity_policy,
+        }
+
+        new_user_id = users.add(**user_details)
         
         app.logger.info(f"User {username} added with ID {new_user_id}")
         connection.close()
@@ -166,6 +172,7 @@ def add_user():
     except Exception as error:
         app.logger.error(f"General error: {error}")
         return jsonify({"status": "Error", "message": "General error: " + str(error)}), 500
+
 
 
 if __name__ == '__main__':
