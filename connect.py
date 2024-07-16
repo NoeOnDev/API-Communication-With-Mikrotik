@@ -126,7 +126,7 @@ def add_user():
         return jsonify({"status": "Error", "message": "Invalid or expired token"}), 400
 
     user_data = request.get_json()
-    app.logger.info('Received user data: %s', user_data)  # Log the received data
+    app.logger.info('Received user data: %s', user_data)
 
     username = user_data.get('name')
     password = user_data.get('password')
@@ -134,8 +134,6 @@ def add_user():
     comment = user_data.get('comment', '')
     enabled = user_data.get('enabled', True)
     allowed_address = user_data.get('allowedAddress', '')
-    inactivity_timeout = user_data.get('inactivityTimeout', '00:10:00')
-    inactivity_policy = user_data.get('inactivityPolicy', 'None')
 
     if not username or not password:
         return jsonify({"status": "Error", "message": "Username and password are required"}), 400
@@ -157,8 +155,6 @@ def add_user():
             comment=comment, 
             disabled=not enabled,
             address=allowed_address if allowed_address else "",
-            inactivity_timeout=inactivity_timeout if inactivity_timeout else "",
-            inactivity_policy=inactivity_policy if inactivity_policy else "none",
         )
         
         app.logger.info(f"User {username} added with ID {new_user_id}")
@@ -170,6 +166,7 @@ def add_user():
     except Exception as error:
         app.logger.error(f"General error: {error}")
         return jsonify({"status": "Error", "message": "General error: " + str(error)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
